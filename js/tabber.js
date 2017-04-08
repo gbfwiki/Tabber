@@ -26,7 +26,7 @@
 				return true;
 			}
 			// setup initial state
-			var loc = location.hash.replace('#', '');
+			var loc = history.replaceState(undefined, undefined, "#")
 			if ( loc == '' || !showContent(loc) ) {
 				showContent(tabContent.first().attr('title'));
 			}
@@ -35,7 +35,7 @@
 			nav.on('click', 'a', function(e) {
 				var title = $(this).attr('title');
 				e.preventDefault();
-				location.hash = '#' + title;
+				history.replaceState(undefined, undefined, "#" + title);
 				showContent( title );
 			});
 
