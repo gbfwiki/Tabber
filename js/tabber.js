@@ -26,7 +26,13 @@
 				return true;
 			}
 			// setup initial state
-			var loc = location.hash.replace('#', '');
+			var loc;
+			if (mw.config.get("wgInternalRedirectTargetUrl")) {
+				loc = decodeURI(mw.config.get("wgInternalRedirectTargetUrl").replace(/.+#/,'').replace(/\.([0-9A-F]{2})/g, "%$1"));
+			}
+			else {
+				loc = decodeURI(location.hash.replace('#', '').replace(/\.([0-9A-F]{2})/g, "%$1"));
+			}
 			if ( loc == '' || !showContent(loc) ) {
 				showContent(tabContent.first().attr('title'));
 			}
@@ -37,9 +43,20 @@
 				e.preventDefault();
 				location.hash = '#' + title;
 				showContent( title );
+				dispatchEvent(new CustomEvent('tabber:nav', {"detail": {"title": title}}));
 			});
 
 			$this.addClass('tabberlive');
+
+			$(window).bind('hashchange', function(e) {
+				var loc = decodeURI(location.hash.replace('#', '').replace(/\.([0-9A-F]{2})/g, "%$1"));
+				if ( loc == '' ) {
+					showContent(tabContent.first().attr('title'));
+				}
+				else {
+					showContent( loc );
+				}
+			});
 		});
 	};
 })(jQuery);
