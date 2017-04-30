@@ -41,7 +41,7 @@
 			nav.on('click', 'a', function(e) {
 				var title = $(this).attr('title');
 				e.preventDefault();
-				location.hash = '#' + title;
+				history.replaceState(undefined, undefined, "#" + title);
 				showContent( title );
 				dispatchEvent(new CustomEvent('tabber:nav', {"detail": {"title": title}}));
 			});
