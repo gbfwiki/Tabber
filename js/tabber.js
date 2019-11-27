@@ -3,78 +3,102 @@
 		return this.each(function() {
 			// create tabs
 			var $this = $(this),
-			    tabContent = $this.children('.tabbertab'),
-			    nav = $('<ul>').addClass('tabbernav');
+				tabContent = $this.children('.tabbertab'),
+				nav = $('<ul>').addClass('tabbernav'),
+				loc;
+
 			tabContent.each(function() {
-				var anchor = $('<a>').text(this.title).attr('title', this.title).attr('href', 'javascript:void(0);');
+				$(this).attr('data-hash', mw.util.escapeIdForAttribute(this.title));
+				var anchor = $('<a>').text(this.title).attr('title',this.title).attr('data-hash', $(this).attr('data-hash')).attr('href', '#');
 				$('<li>').append(anchor).appendTo(nav);
+
+				// Append a manual word break point after each tab
+				nav.append($('<wbr>'));
 			});
+
 			$this.prepend(nav);
 
 			/**
 			 * Internal helper function for showing content
-			 * @param  string title to show, matching only 1 tab
-			 * @return true if matching tab could be shown
+			 * @param  {string} title to show, matching only 1 tab
+			 *  Accepts only fully encoded titles (e.g. "Extreme.2B_.28Titan.29" for "Extreme+ (Titan)")
+			 * @return {bool} true if matching tab could be shown
 			 */
 			function showContent(title) {
-				var content = tabContent.filter('[title="' + title + '"]');
-				if (content.length !== 1) return false;
+				var content = tabContent.filter('[data-hash="' + title + '"]');
+				if (content.length !== 1) { return false; }
 				tabContent.hide();
 				content.show();
 				nav.find('.tabberactive').removeClass('tabberactive');
-				nav.find('a[title="' + title + '"]').parent().addClass('tabberactive');
+				nav.find('a[data-hash="' + title + '"]').parent().addClass('tabberactive');
 				return true;
-			}
-			function showContentScroll(title) {
-				// literally nearly identical function but with scroll, wow i'm so good at js
-				var title = title.replace("_", " "); // wiki doesn't like spaces in links
-				var title = title.replace(".2B", "+");
-				var title = title.replace(".28", "(");
-				var title = title.replace(".29", ")");
-				var content = tabContent.filter('[title="' + title + '"]');
-				if (content.length !== 1) return false;
-				tabContent.hide();
-				content.show();
-				nav.find('.tabberactive').removeClass('tabberactive');
-				nav.find('a[title="' + title + '"]').parent().addClass('tabberactive');
-				$('a[title="' + title + '"]')[0].scrollIntoView();
-				return true;
-			}
-			// setup initial state
-			var loc;
-			if (mw.config.get("wgInternalRedirectTargetUrl")) {
-				loc = decodeURI(mw.config.get("wgInternalRedirectTargetUrl").replace(/.+#/,'').replace(/\.([0-9A-F]{2})/g, "%$1"));
-			}
-			else {
-				loc = decodeURI(location.hash.replace('#', '').replace(/\.([0-9A-F]{2})/g, "%$1"));
-			}
-			if ( loc == '' || !showContentScroll(loc) ) {
-				showContent(tabContent.first().attr('title'));
 			}
 
-			// Repond to clicks on the nav tabs
+			/**
+			 * Wrapper function for showContent that additionally
+			 * shows the tabber content into view
+			 */
+			function showContentScroll(title) {
+				var retval = showContent(title);
+				if (retval) {
+					var element = document.querySelector(`[data-hash="${title}"]`);
+					element.scrollIntoView();
+				}
+
+				return retval;
+			}
+
+			// setup initial state
+			var tab = new mw.Uri(location.href).fragment;
+			if (tab === '' || !showContent(tab)) {
+				showContent(tabContent.first().attr('data-hash'));
+			} else {
+				showContentScroll(tab);
+			}
+
+			// Respond to clicks on the nav tabs
 			nav.on('click', 'a', function(e) {
-				var title = $(this).attr('title');
+				var title = $(this).attr('data-hash');
 				e.preventDefault();
-				history.replaceState(undefined, undefined, "#" + title);
-				showContent( title );
-				dispatchEvent(new CustomEvent('tabber:nav', {"detail": {"title": title}}));
+				if (history.replaceState) {
+					history.replaceState(null, null, '#' + title);
+					switchTab();
+				} else if (history.pushState) {
+					history.pushState(null, null, '#' + title);
+					switchTab();
+				} else {
+					location.hash = '#' + title;
+				}
 			});
+
+			$(window).on('hashchange', function(event) {
+				switchTab();
+			});
+
+			function switchTab() {
+				var tab = new mw.Uri(location.href).fragment;
+				if (!tab.length) {
+					showContent(tabContent.first().attr('data-hash'));
+				}
+				if (nav.find('a[data-hash="'+tab+'"]').length) {
+					showContent(tab);
+				}
+			}
 
 			$this.addClass('tabberlive');
 
 			$(window).bind('hashchange', function(e) {
-				var loc = decodeURI(location.hash.replace('#', '').replace(/\.([0-9A-F]{2})/g, "%$1"));
+				var loc = location.hash.replace('#', '');
 				if ( loc == '' ) {
 					showContent(tabContent.first().attr('title'));
 				}
 				else {
-					showContent( loc );
+					showContentScroll(loc);
 				}
 			});
 		});
 	};
-})(jQuery);
+}(jQuery));
 
 $(document).ready(function() {
 	$('.tabber').tabber();
