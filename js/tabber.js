@@ -34,10 +34,26 @@
 				return true;
 			}
 
+			/**
+			 * Wrapper function for showContent that additionally
+			 * shows the tabber content into view
+			 */
+			function showContentScroll(title) {
+				var retval = showContent(title);
+				if (retval) {
+					var element = document.querySelector(`[data-hash="${title}"]`);
+					element.scrollIntoView();
+				}
+
+				return retval;
+			}
+
 			// setup initial state
 			var tab = new mw.Uri(location.href).fragment;
 			if (tab === '' || !showContent(tab)) {
 				showContent(tabContent.first().attr('data-hash'));
+			} else {
+				showContentScroll(tab);
 			}
 
 			// Respond to clicks on the nav tabs
@@ -74,7 +90,7 @@
 					showContent(tabContent.first().attr('title'));
 				}
 				else {
-					showContent( loc );
+					showContentScroll(loc);
 				}
 			});
 		});
