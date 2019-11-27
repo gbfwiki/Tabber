@@ -60,7 +60,10 @@
 			nav.on('click', 'a', function(e) {
 				var title = $(this).attr('data-hash');
 				e.preventDefault();
-				if (history.pushState) {
+				if (history.replaceState) {
+					history.replaceState(null, null, '#' + title);
+					switchTab();
+				} else if (history.pushState) {
 					history.pushState(null, null, '#' + title);
 					switchTab();
 				} else {
