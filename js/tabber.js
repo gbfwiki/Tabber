@@ -21,6 +21,7 @@
 			/**
 			 * Internal helper function for showing content
 			 * @param  {string} title to show, matching only 1 tab
+			 *  Accepts only fully encoded titles (e.g. "Extreme.2B_.28Titan.29" for "Extreme+ (Titan)")
 			 * @return {bool} true if matching tab could be shown
 			 */
 			function showContent(title) {
