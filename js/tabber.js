@@ -68,7 +68,7 @@
 			$this.addClass('tabberlive');
 
 			$(window).bind('hashchange', function(e) {
-				var loc = decodeURI(location.hash.replace('#', '').replace(/\.([0-9A-F]{2})/g, "%$1"));
+				var loc = location.hash.replace('#', '');
 				if ( loc == '' ) {
 					showContent(tabContent.first().attr('title'));
 				}
